@@ -6,7 +6,7 @@ import { Doughnut } from "react-chartjs-2";
 
 ChartJS.register(ArcElement, Tooltip, Legend);
 
-function ProgressAndForecastChart(props: any) {
+function ProgressCharts(props: any) {
 
     const [weeklyTasks, setweeklyTasks] = useState<any>(
         {
@@ -167,7 +167,7 @@ function ProgressAndForecastChart(props: any) {
     // filter them. 
 
     const yearlyData = {
-        labels: ['Total Week Tasks', 'completed Tasks'],
+        labels: ['Incomplete Tasks', 'completed Tasks'],
         datasets: [
             {
                 label: 'Tasks',
@@ -194,7 +194,7 @@ function ProgressAndForecastChart(props: any) {
     };
 
     const monthlyData = {
-        labels: ['Total Week Tasks', 'completed Tasks'],
+        labels: ['Incomplete Tasks', 'completed Tasks'],
         datasets: [
             {
                 label: 'Tasks',
@@ -221,7 +221,7 @@ function ProgressAndForecastChart(props: any) {
     };
 
     const weeklyData = {
-        labels: ['Total Week Tasks', 'completed Tasks'],
+        labels: ['Incomplete Tasks', 'completed Tasks'],
         datasets: [
             {
                 label: 'Tasks',
@@ -255,4 +255,4 @@ function ProgressAndForecastChart(props: any) {
     </div>);
 };
 
-export { ProgressAndForecastChart }; 
+export { ProgressCharts }; 
