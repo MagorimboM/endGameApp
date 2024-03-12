@@ -3,8 +3,7 @@ import {supabase} from '../../../BackendServices/supabase';
 import { RiLoginCircleFill } from "react-icons/ri";
 import { IoArrowBackCircle } from "react-icons/io5";
 import { useState, useEffect } from 'react';
-import { ErrorMessage } from '../../Messages/Error/ErrorMessage';
-import { SuccessMessage } from '../../Messages/success/SuccessMessage';
+
 
 
 // need to clear fields after i recieved response from supabase

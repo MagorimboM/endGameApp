@@ -24,13 +24,10 @@ function UpcomingTasks(props: any) {
             if (data) {
                 // if recieved data filter the tasks and only show tasks that start later than current date
                 const upComing = data.filter((items: any) => {
-
-                    console.log('here is a start,', items.start + 'here is the finish, ', items.completion);
                     return items.start > currentDate.toISOString()
                 });
 
                 setUpcomintTasks(upComing);
-                console.log('here are the tasks: ', upComing)
             };
             if (error) {
 

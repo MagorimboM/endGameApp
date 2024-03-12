@@ -1,206 +1,258 @@
-import React from 'react';
-import { ResponsiveLine } from '@nivo/line'
+import React, { useEffect, useState } from 'react';
+import { Update } from '../../sharedState/sharedState';
+import { supabase } from '../../../BackendServices/supabase';
+import { Chart as ChartJS, ArcElement, Tooltip, Legend } from "chart.js";
+import { Doughnut } from "react-chartjs-2";
 
-
-
-
+ChartJS.register(ArcElement, Tooltip, Legend);
 
 function ProgressAndForecastChart(props: any) {
 
-    const data = [{"id": "japan","color": "hsl(168, 70%, 50%)","data": [
-                {
-                    "x": "plane",
-                    "y": 108
-                },
-                {
-                    "x": "helicopter",
-                    "y": 253
-                },
-                {
-                    "x": "boat",
-                    "y": 204
-                },
-                {
-                    "x": "train",
-                    "y": 206
-                },
-                {
-                    "x": "subway",
-                    "y": 158
-                },
-                {
-                    "x": "bus",
-                    "y": 53
-                },
-                {
-                    "x": "car",
-                    "y": 287
-                },
-                {
-                    "x": "moto",
-                    "y": 78
-                },
-                {
-                    "x": "bicycle",
-                    "y": 81
-                },
-                {
-                    "x": "horse",
-                    "y": 175
-                },
-                {
-                    "x": "skateboard",
-                    "y": 40
-                },
-                {
-                    "x": "others",
-                    "y": 131
-                }
-            ]
-        },
+    const [weeklyTasks, setweeklyTasks] = useState<any>(
         {
-            "id": "france",
-            "color": "hsl(358, 70%, 50%)",
-            "data": [
-                {
-                    "x": "plane",
-                    "y": 258
-                },
-                {
-                    "x": "helicopter",
-                    "y": 15
-                },
-                {
-                    "x": "boat",
-                    "y": 80
-                },
-                {
-                    "x": "train",
-                    "y": 126
-                },
-                {
-                    "x": "subway",
-                    "y": 22
-                },
-                {
-                    "x": "bus",
-                    "y": 38
-                },
-                {
-                    "x": "car",
-                    "y": 201
-                },
-                {
-                    "x": "moto",
-                    "y": 42
-                },
-                {
-                    "x": "bicycle",
-                    "y": 116
-                },
-                {
-                    "x": "horse",
-                    "y": 31
-                },
-                {
-                    "x": "skateboard",
-                    "y": 91
-                },
-                {
-                    "x": "others",
-                    "y": 79
-                }
-            ]
+            totaTasks: '',
+            completedTasks: ''
         }
-    ]
+    );
+    const [monthlyTasks, setMonthlyTasks] = useState<any>([
+        {
+            totaTasks: '',
+            completedTasks: ''
+        }
+    ]);
+    const [yearlyTasks, setYearlyTasks] = useState<any>(
+        {
+            totaTasks: '',
+            completedTasks: ''
+        }
+    );
+    const { update, setUpdate, resetState } = Update();
+    const date: Date = new Date();
+    // start of the year date
+    const startOfTheYear = new Date(date.getFullYear(), 0, 1);
+    // convert to ISO String
+    const startOfYear = startOfTheYear.toISOString();
+    // end of the year date
+    const endOfTheYear = new Date(date.getFullYear(), 11, 31);
+    // convert end of the year date to ISO 
+    const endOfYear = endOfTheYear.toISOString();
+    // date of the begining of the month
+    const beginningOfMonthDate: Date = new Date(date.getFullYear(), date.getMonth(), 1);
+    // convert to beginning of Month Date to  ISO string
+    const monthBeginningDate = beginningOfMonthDate.toISOString();
+    console.log('beginning of Month date: ', monthBeginningDate);
+    // end of month date
+    const endOfMonthDate = new Date(date.getFullYear(), date.getMonth() + 1, 0);
+    // convert end of month date to ISO string. 
+    const endMonthDate = endOfMonthDate.toISOString();
+    console.log('end of current month date : ', endMonthDate);
+    // day of the week.
+    const currentDayofTheWeek: number = date.getDay();
+    console.log('current day of the week : ', currentDayofTheWeek);
+    // numbers of days from the beginning of the week. 
+    const dayOneOfWeek = currentDayofTheWeek - 0;
+    console.log('day one of the week : ', dayOneOfWeek);
+    // number of days to the end of the week. 
+    const lastDayOfWeek = 6 - currentDayofTheWeek;
+    console.log('last day of the week : ', currentDayofTheWeek);
+    // get the date of the begining of the week.
+    const startOfTheWeek = new Date(date.getTime() - (dayOneOfWeek * 24 * 60 * 60 * 1000));
+    // convert the date of the begining of the week to this ('2024-04-03') format.
+    const startOfWeekDate = startOfTheWeek.toISOString();
+    // get the date of the end of the week. 
+    const endOfTheWeek = new Date(date.getTime() + (lastDayOfWeek * 24 * 60 * 60 * 1000));
+    // convert the date of the end of the week to this ('2024-04-03') format.
+    const endOfWeek = endOfTheWeek.toISOString();
 
 
-    return (<>
+    useEffect(() => {
+
+        // take information for the week,
+        // this information to be displayed in Inprogress Tasks.
+
+        async function getData() {
+            const { data, error } = await supabase.from('tasks').select('*');
+
+            if (data) {
+                const inCompleteYearTasks = data.filter((task: any) => {
+                    if (task.start >= startOfYear && task.start <= endOfYear || task.completion >= startOfYear
+                        && task.completion <= endOfYear) {
+
+                        if (task.completed === null && task.skip === null) {
+                            return task;
+                        };
+                    };
+                });
+                const completedYearlyTasks = data.filter((task: any) => {
+
+                    if (task.start >= startOfYear && task.start <= endOfYear || task.completion >= startOfYear
+                        && task.completion <= endOfYear) {
+                        if (task.completed === 'yes') {
+                            return task;
+                        };
+                    };
+                });
+
+                const incompleteMonthTasks = data.filter((task: any) => {
+                    if (task.start >= monthBeginningDate && task.start <= endMonthDate || task.completion >= monthBeginningDate
+                        && task.completion <= endMonthDate) {
+
+                        if (task.completed === null && task.skip === null) {
+                            return task;
+                        };
+
+                    };
+                });
+
+                const completedMonthlyTask = data.filter((task: any) => {
+                    if (task.start >= monthBeginningDate && task.start <= endMonthDate || task.completion >= monthBeginningDate
+                        && task.completion <= endMonthDate) {
+
+                        if (task.completed === 'yes') {
+                            return task;
+                        };
+                    };
+                });
+
+                const incompleteWeeklyTasks = data.filter((task: any) => {
+
+                    if (task.start >= startOfWeekDate && task.start <= endOfWeek || task.completion >= startOfWeekDate && task.completion <= endOfWeek) {
+                        if (task.completed === null && task.skip === null) {
+                            return task;
+                        };
+                    };
+                });
+                const weeklyCompletedTasks = data.filter((task: any) => {
+
+                    if (task.start >= startOfWeekDate && task.start <= endOfWeek || task.completion >= startOfWeekDate && task.completion <= endOfWeek) {
+                        if (task.completion === 'yes') {
+                            return task;
+                        };
+                    };
+
+                });
+
+                console.log('weekly tasks', weeklyTasks.length); 
+
+                setYearlyTasks((yearlyTasks: any) => ({ ...yearlyTasks, totalTasks: inCompleteYearTasks.length, completedTasks: completedYearlyTasks.length }));
+                setMonthlyTasks((monthlyTasks: any) => ({ ...monthlyTasks, totalTasks: incompleteMonthTasks.length, completedTasks: completedMonthlyTask.length }));
+                setweeklyTasks((weeklyTask: any) => ({ ...weeklyTasks, totalTasks: incompleteWeeklyTasks.length, completedTasks: weeklyCompletedTasks.length }));
+
+            };
+
+            if (error) {
+                console.log('there is an error fetching tasks from database for the charts', error.message);
+            };
+
+        };
+
+        getData();
+        resetState();
+    }, [update]);
+
+    useEffect(() => {
+
+        // this information to be displayed in the chart
+        // tasks completed in week one and total tasks
+        // calculate number of tasks for the week && total percentage. 
 
 
-        <ResponsiveLine
-            data={data}
-            margin={{ top: 50, right: 110, bottom: 50, left: 60 }}
-            xScale={{ type: 'point' }}
-            yScale={{
-                type: 'linear',
-                min: 'auto',
-                max: 'auto',
-                stacked: true,
-                reverse: false,
 
-            }}
-            yFormat=" >-.2f"
-            curve="cardinal"
-            axisTop={null}
-            axisRight={null}
-            axisBottom={{
-                tickSize: 5,
-                tickPadding: 5,
-                tickRotation: 0,
-                legend: 'transportation',
-                legendOffset: 36,
-                legendPosition: 'middle',
+        // save the percentage in a data structure
+        // create array of JSON objects
+        //send the array to the charts
 
-            }}
-            axisLeft={{
-                tickSize: 5,
-                tickPadding: 5,
-                tickRotation: 0,
-                legend: 'count',
-                legendOffset: -40,
-                legendPosition: 'middle',
+    }, [monthlyTasks]);
+    // any tasks that start betweenn startOfWeek and endOfWeek or are to be completed between startOfweek and endOfweek
+    // filter them. 
+
+    const yearlyData = {
+        labels: ['Total Week Tasks', 'completed Tasks'],
+        datasets: [
+            {
+                label: 'Tasks',
+                data: [yearlyTasks.totalTasks, yearlyTasks.completedTasks],
+                backgroundColor: [
+                    'rgba(255, 99, 132, 0.2)',
+                    'rgba(54, 162, 235, 0.2)',
+                    'rgba(255, 206, 86, 0.2)',
+                    'rgba(75, 192, 192, 0.2)',
+                    'rgba(153, 102, 255, 0.2)',
+                    'rgba(255, 159, 64, 0.2)',
+                ],
+                borderColor: [
+                    'rgba(255, 99, 132, 1)',
+                    'rgba(54, 162, 235, 1)',
+                    'rgba(255, 206, 86, 1)',
+                    'rgba(75, 192, 192, 1)',
+                    'rgba(153, 102, 255, 1)',
+                    'rgba(255, 159, 64, 1)',
+                ],
+                borderWidth: 1,
+            },
+        ],
+    };
+
+    const monthlyData = {
+        labels: ['Total Week Tasks', 'completed Tasks'],
+        datasets: [
+            {
+                label: 'Tasks',
+                data: [monthlyTasks.totalTasks, monthlyTasks.completedTasks],
+                backgroundColor: [
+                    'rgba(255, 99, 132, 0.2)',
+                    'rgba(54, 162, 235, 0.2)',
+                    'rgba(255, 206, 86, 0.2)',
+                    'rgba(75, 192, 192, 0.2)',
+                    'rgba(153, 102, 255, 0.2)',
+                    'rgba(255, 159, 64, 0.2)',
+                ],
+                borderColor: [
+                    'rgba(255, 99, 132, 1)',
+                    'rgba(54, 162, 235, 1)',
+                    'rgba(255, 206, 86, 1)',
+                    'rgba(75, 192, 192, 1)',
+                    'rgba(153, 102, 255, 1)',
+                    'rgba(255, 159, 64, 1)',
+                ],
+                borderWidth: 1,
+            },
+        ],
+    };
+
+    const weeklyData = {
+        labels: ['Total Week Tasks', 'completed Tasks'],
+        datasets: [
+            {
+                label: 'Tasks',
+                data: [weeklyTasks.totalTasks, weeklyTasks.completedTasks],
+                backgroundColor: [
+                    'rgba(255, 99, 132, 0.2)',
+                    'rgba(54, 162, 235, 0.2)',
+                    'rgba(255, 206, 86, 0.2)',
+                    'rgba(75, 192, 192, 0.2)',
+                    'rgba(153, 102, 255, 0.2)',
+                    'rgba(255, 159, 64, 0.2)',
+                ],
+                borderColor: [
+                    'rgba(255, 99, 132, 1)',
+                    'rgba(54, 162, 235, 1)',
+                    'rgba(255, 206, 86, 1)',
+                    'rgba(75, 192, 192, 1)',
+                    'rgba(153, 102, 255, 1)',
+                    'rgba(255, 159, 64, 1)',
+                ],
+                borderWidth: 1,
+            },
+        ],
+    };
 
 
-
-            }}
-            theme={{
-                "text": {
-                    "fontSize": 11,
-                    "fill": "#ffffff",
-                    "outlineWidth": 0,
-                    "outlineColor": "transparent"
-                }
-            }}
-            enableGridX={false}
-            enableGridY={false}
-            lineWidth={1}
-            pointSize={5}
-            pointColor={{ from: 'color', modifiers: [] }}
-            pointBorderWidth={1}
-            pointBorderColor={{ from: 'color', modifiers: [] }}
-            pointLabelYOffset={-12}
-            enableArea={true}
-            areaOpacity={0.1}
-            useMesh={true}
-            legends={[
-                {
-                    anchor: 'bottom-right',
-                    direction: 'column',
-                    justify: false,
-                    translateX: 100,
-                    translateY: 0,
-                    itemsSpacing: 0,
-                    itemDirection: 'left-to-right',
-                    itemWidth: 80,
-                    itemHeight: 20,
-                    itemOpacity: 0.75,
-                    symbolSize: 12,
-                    symbolShape: 'circle',
-                    symbolBorderColor: 'rgba(0, 0, 0, .5)',
-                    effects: [
-                        {
-                            on: 'hover',
-                            style: {
-                                itemBackground: 'rgba(0, 0, 0, .03)',
-                                itemOpacity: 1
-                            }
-                        }
-                    ]
-                }
-            ]}
-        />
-    </>);
+    return (<div className='flex flex-col md:flex-row'>
+        <Doughnut data={yearlyData} />
+        <Doughnut data={monthlyData} />
+        <Doughnut data={weeklyData} />
+    </div>);
 };
 
 export { ProgressAndForecastChart }; 

@@ -25,14 +25,6 @@ function SideBar() {
         }
         , {
 
-            icon: <FaChartBar />, // completion forecast chart
-            href: '/TasksInProgressPage'
-        }, {
-
-            icon: <LuLineChart />, // task complete chart
-            href: '/ForecastChartPage'
-        }, {
-
             icon: <MdSettings />,// account settings 
             href: '/'
         }

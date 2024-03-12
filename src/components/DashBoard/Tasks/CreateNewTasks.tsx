@@ -17,6 +17,7 @@ function CreateNewTask(props: any) {
         completion: ''
     });
     const today = new Date().toISOString().split('T')[0];
+    console.log(today)
 
     const inputInfo = [
 
@@ -46,8 +47,8 @@ function CreateNewTask(props: any) {
         {
             title: 'Completion Date',
             placeHolder: 'Completion Date',
-            min: today, 
-            value: newTask.completion,
+            min: newTask.start,
+            value: newTask.start,
             onChange: (event: any) => { setNewTask((newTask: any) => ({ ...newTask, completion: event.target.value })) },
             type: 'date'
         },

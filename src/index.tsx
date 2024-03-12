@@ -7,8 +7,7 @@ import CreateAccountPage from './pages/createAccountPage';
 import UserDashBoardPage from './pages/UserDashboard/UserDashBoardPage'; 
 import reportWebVitals from './reportWebVitals';
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
-import ForecastChartPage from './pages/UserDashboard/ForecastChartPage';
-import TasksInProgressPage from './pages/UserDashboard/TasksInProgressPage';
+
 
 
 
@@ -29,14 +28,7 @@ const router = createBrowserRouter([
     path: '/User',
     element: <UserDashBoardPage />
   },
-  {
-    path: '/ForecastChartPage',
-    element: <ForecastChartPage />
-  },
-  {
-    path: '/TasksInProgressPage',
-    element: <TasksInProgressPage />
-  }, 
+ 
   {
     path: '/UserDashBoardPage', 
     element: <UserDashBoardPage/>
