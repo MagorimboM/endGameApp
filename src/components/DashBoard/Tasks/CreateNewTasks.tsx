@@ -10,11 +10,13 @@ import { Update } from '../../../components/sharedState/sharedState';
 
 function CreateNewTask(props: any) {
     const { setUpdate } = Update();
+    const [User, setUser] = useState<any>();
     const [newTask, setNewTask] = useState<any>({
         name: '',
         description: '',
         start: '',
-        completion: ''
+        completion: '',
+        userID: null
     });
     const today = new Date().toISOString().split('T')[0];
     console.log(today)
@@ -39,7 +41,7 @@ function CreateNewTask(props: any) {
         {
             title: 'Start Date',
             placeHolder: 'StartDate',
-            min : today, 
+            min: today,
             value: newTask.start,
             onChange: (event: any) => { setNewTask((newTask: any) => ({ ...newTask, start: event.target.value })) },
             type: 'date'
@@ -48,40 +50,52 @@ function CreateNewTask(props: any) {
             title: 'Completion Date',
             placeHolder: 'Completion Date',
             min: newTask.start,
-            value: newTask.start,
+            value: newTask.completion,
             onChange: (event: any) => { setNewTask((newTask: any) => ({ ...newTask, completion: event.target.value })) },
             type: 'date'
         },
-
-
     ];
+
+    useEffect(() => {
+        const getUserId = async () => {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (user) {
+                setNewTask((prev: any) => ({ ...newTask, userID: user.id }));
+                setUser(user);
+            } else {
+                console.log('use Effect cannot find user');
+            }; 
+        };
+        getUserId();
+    }, [])
     function Hide() {
         // hide form     
         props.setShow(false);
     };
     async function createTask() {
-        // send new task created to supabase database; 
+        // send new task created to supabase database;
+        if (User) {
+            const { error } = await supabase.from("tasks").insert(newTask);
+            if (error) {
+                // console output errors for further error handling
+                console.log('there is an error with creating task:', error.message);
+            } else {
+                // reset all input fields 
+                setNewTask({
+                    name: '',
+                    description: '',
+                    start: '',
+                    completion: ''
+                })
+                // hide create task form
+                props.setShow(false);
+                // trigger re-render
+                setUpdate();
 
-        const { error } = await supabase.from("tasks").insert(newTask);
-
-        if (error) {
-            // console output errors for further error handling
-
-            console.log('there is an error with creating task:', error.message);
-        } else {
-
-            // reset all input fields 
-            setNewTask({
-                name: '',
-                description: '',
-                start: '',
-                completion: ''
-            })
-            // hide create task form
-            props.setShow(false);
-            // trigger re-render
-            setUpdate();
-
+            };
+        }
+        else {
+            console.log('no user is logged in: ')
         };
     };
 

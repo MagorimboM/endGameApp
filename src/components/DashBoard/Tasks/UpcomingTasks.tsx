@@ -18,26 +18,26 @@ function UpcomingTasks(props: any) {
         const currentDate = new Date();
 
         const fetchData = async () => {
-
             // collect information from supabase database
-            const { data, error } = await supabase.from('tasks').select("*");
-            if (data) {
-                // if recieved data filter the tasks and only show tasks that start later than current date
-                const upComing = data.filter((items: any) => {
-                    return items.start > currentDate.toISOString()
-                });
-
-                setUpcomintTasks(upComing);
+            const { data: { user } } = await supabase.auth.getUser();
+            if (user) {
+                const { data, error } = await supabase.from('tasks').select("*").eq('userID', user.id);
+                if (data) {
+                    // if recieved data filter the tasks and only show tasks that start later than current date
+                    const upComing = data.filter((items: any) => {
+                        return items.start > currentDate.toISOString() || items.completion >= currentDate.toISOString();
+                    });
+                    setUpcomintTasks(upComing);
+                };
+                if (error) {
+                    console.error('there is an error upcoming Tasks: ', error);
+                };
             };
-            if (error) {
-
-                console.error('there is an error upcoming Tasks: ', error);
-            };
-        };
+        }; 
         // run fetch operation
         fetchData();
         // reset for future re-render triggers
-        resetState(); 
+        resetState();
         /* when update value changes re-render component */
     }, [update]);
 
@@ -45,9 +45,9 @@ function UpcomingTasks(props: any) {
     const deleteTask = async (Id: any) => {
         const { error } = await supabase.from('tasks').delete().match({ id: Id });
         if (!error) {
-            setUpdate(); 
-            console.log('deleted a task'); 
-        }; 
+            setUpdate();
+            console.log('deleted a task');
+        };
     };
     return (<>
 

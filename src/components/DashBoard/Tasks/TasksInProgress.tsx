@@ -2,7 +2,7 @@ import React from 'react';
 import { MdAddTask } from "react-icons/md";
 import { supabase } from '../../../BackendServices/supabase';
 import { useState, useEffect } from 'react';
-import { Update,} from '../../../components/sharedState/sharedState';
+import { Update, } from '../../../components/sharedState/sharedState';
 
 function TasksInProgress(props: any) {
     // fetchData errors for further handling
@@ -11,21 +11,24 @@ function TasksInProgress(props: any) {
     const [tasks, setTasks] = useState<any>();
     // global state for re-render trigger
     const { update, setUpdate, resetState } = Update();
- 
+
     useEffect(() => {
         // overall operation : fetch data and re-render when update changed value from false to true.
         const fetchTasks = async () => {
             // fetch tasks of the day that are not done and not skipped
-            const { data, error } = await supabase.from('tasks').select('*').filter('completed', 'is', null).filter('skip', 'is', null);
-            // for errors send to output for handling. 
-            if (error) {
-                console.log(' there is an error fetching tasks from database');
-                setErrorFetchingTasks(error);
-            };
-            // if tasks recieved store data in state variable
-            if (data) {
-                setTasks(data);
-                
+            const { data: { user } } = await supabase.auth.getUser();
+            if (user) {
+                const { data, error } = (await supabase.from('tasks').select('*')
+                    .eq('userID', user.id).filter('completed', 'is', null).filter('skip', 'is', null));
+                // for errors send to output for handling. 
+                if (error) {
+                    console.log(' there is an error fetching tasks from database');
+                    setErrorFetchingTasks(error);
+                };
+                // if tasks recieved store data in state variable
+                if (data) {
+                    setTasks(data);
+                };
             };
         };
         // fetch tasks from supabase
@@ -55,7 +58,7 @@ function TasksInProgress(props: any) {
             console.log('we have run into error, issues updating tasks to skip', error);
         } else {
             // trigger re-render if operation is successfull
-            
+
         };
     };
     return (

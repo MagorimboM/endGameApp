@@ -40,21 +40,16 @@ function ProgressCharts(props: any) {
     const beginningOfMonthDate: Date = new Date(date.getFullYear(), date.getMonth(), 1);
     // convert to beginning of Month Date to  ISO string
     const monthBeginningDate = beginningOfMonthDate.toISOString();
-    console.log('beginning of Month date: ', monthBeginningDate);
     // end of month date
     const endOfMonthDate = new Date(date.getFullYear(), date.getMonth() + 1, 0);
     // convert end of month date to ISO string. 
     const endMonthDate = endOfMonthDate.toISOString();
-    console.log('end of current month date : ', endMonthDate);
     // day of the week.
     const currentDayofTheWeek: number = date.getDay();
-    console.log('current day of the week : ', currentDayofTheWeek);
     // numbers of days from the beginning of the week. 
     const dayOneOfWeek = currentDayofTheWeek - 0;
-    console.log('day one of the week : ', dayOneOfWeek);
     // number of days to the end of the week. 
     const lastDayOfWeek = 6 - currentDayofTheWeek;
-    console.log('last day of the week : ', currentDayofTheWeek);
     // get the date of the begining of the week.
     const startOfTheWeek = new Date(date.getTime() - (dayOneOfWeek * 24 * 60 * 60 * 1000));
     // convert the date of the begining of the week to this ('2024-04-03') format.
@@ -71,103 +66,88 @@ function ProgressCharts(props: any) {
         // this information to be displayed in Inprogress Tasks.
 
         async function getData() {
-            const { data, error } = await supabase.from('tasks').select('*');
+            const { data: { user } } = await supabase.auth.getUser();
+            if (user) {
+                const { data, error } = await supabase.from('tasks').select('*').eq('userID', user.id);
+                if (data) {
+                    const inCompleteYearTasks = data.filter((task: any) => {
+                        if (task.start >= startOfYear && task.start <= endOfYear || task.completion >= startOfYear
+                            && task.completion <= endOfYear) {
 
-            if (data) {
-                const inCompleteYearTasks = data.filter((task: any) => {
-                    if (task.start >= startOfYear && task.start <= endOfYear || task.completion >= startOfYear
-                        && task.completion <= endOfYear) {
-
-                        if (task.completed === null && task.skip === null) {
-                            return task;
+                            if (task.completed === null && task.skip === null || task.completed === null && task.skip !== null) {
+                                return task;
+                            };
                         };
-                    };
-                });
-                const completedYearlyTasks = data.filter((task: any) => {
+                    });
+                    const completedYearlyTasks = data.filter((task: any) => {
 
-                    if (task.start >= startOfYear && task.start <= endOfYear || task.completion >= startOfYear
-                        && task.completion <= endOfYear) {
-                        if (task.completed === 'yes') {
-                            return task;
+                        if (task.start >= startOfYear && task.start <= endOfYear || task.completion >= startOfYear
+                            && task.completion <= endOfYear) {
+                            if (task.completed === 'yes') {
+                                return task;
+                            };
                         };
-                    };
-                });
+                    });
 
-                const incompleteMonthTasks = data.filter((task: any) => {
-                    if (task.start >= monthBeginningDate && task.start <= endMonthDate || task.completion >= monthBeginningDate
-                        && task.completion <= endMonthDate) {
+                    const incompleteMonthTasks = data.filter((task: any) => {
+                        if (task.start >= monthBeginningDate && task.start <= endMonthDate || task.completion >= monthBeginningDate
+                            && task.completion <= endMonthDate) {
 
-                        if (task.completed === null && task.skip === null) {
-                            return task;
+                            if (task.completed === null && task.skip === null || task.completed === null && task.skip !== null) {
+                                return task;
+                            };
+
+                        };
+                    });
+
+                    const completedMonthlyTask = data.filter((task: any) => {
+                        if (task.start >= monthBeginningDate && task.start <= endMonthDate || task.completion >= monthBeginningDate
+                            && task.completion <= endMonthDate) {
+
+                            if (task.completed === 'yes') {
+                                return task;
+                            };
+                        };
+                    });
+
+                    const incompleteWeeklyTasks = data.filter((task: any) => {
+
+                        if (task.start >= startOfWeekDate && task.start <= endOfWeek || task.completion >= startOfWeekDate && task.completion <= endOfWeek) {
+                            if (task.completed === null && task.skip === null || task.completed === null && task.skip !== null) {
+                                return task;
+                            };
+                        };
+                    });
+                    const weeklyCompletedTasks = data.filter((task: any) => {
+
+                        if (task.start >= startOfWeekDate && task.start <= endOfWeek || task.completion >= startOfWeekDate && task.completion <= endOfWeek) {
+                            if (task.completion === 'yes') {
+                                return task;
+                            };
                         };
 
-                    };
-                });
+                    });
 
-                const completedMonthlyTask = data.filter((task: any) => {
-                    if (task.start >= monthBeginningDate && task.start <= endMonthDate || task.completion >= monthBeginningDate
-                        && task.completion <= endMonthDate) {
+                    console.log('weekly tasks', weeklyTasks.length);
 
-                        if (task.completed === 'yes') {
-                            return task;
-                        };
-                    };
-                });
+                    setYearlyTasks((yearlyTasks: any) => ({ ...yearlyTasks, totalTasks: inCompleteYearTasks.length, completedTasks: completedYearlyTasks.length }));
+                    setMonthlyTasks((monthlyTasks: any) => ({ ...monthlyTasks, totalTasks: incompleteMonthTasks.length, completedTasks: completedMonthlyTask.length }));
+                    setweeklyTasks((weeklyTask: any) => ({ ...weeklyTasks, totalTasks: incompleteWeeklyTasks.length, completedTasks: weeklyCompletedTasks.length }));
 
-                const incompleteWeeklyTasks = data.filter((task: any) => {
+                };
 
-                    if (task.start >= startOfWeekDate && task.start <= endOfWeek || task.completion >= startOfWeekDate && task.completion <= endOfWeek) {
-                        if (task.completed === null && task.skip === null) {
-                            return task;
-                        };
-                    };
-                });
-                const weeklyCompletedTasks = data.filter((task: any) => {
-
-                    if (task.start >= startOfWeekDate && task.start <= endOfWeek || task.completion >= startOfWeekDate && task.completion <= endOfWeek) {
-                        if (task.completion === 'yes') {
-                            return task;
-                        };
-                    };
-
-                });
-
-                console.log('weekly tasks', weeklyTasks.length); 
-
-                setYearlyTasks((yearlyTasks: any) => ({ ...yearlyTasks, totalTasks: inCompleteYearTasks.length, completedTasks: completedYearlyTasks.length }));
-                setMonthlyTasks((monthlyTasks: any) => ({ ...monthlyTasks, totalTasks: incompleteMonthTasks.length, completedTasks: completedMonthlyTask.length }));
-                setweeklyTasks((weeklyTask: any) => ({ ...weeklyTasks, totalTasks: incompleteWeeklyTasks.length, completedTasks: weeklyCompletedTasks.length }));
-
+                if (error) {
+                    console.log('there is an error fetching tasks from database for the charts', error.message);
+                };
             };
-
-            if (error) {
-                console.log('there is an error fetching tasks from database for the charts', error.message);
-            };
-
         };
 
         getData();
         resetState();
     }, [update]);
 
-    useEffect(() => {
-
-        // this information to be displayed in the chart
-        // tasks completed in week one and total tasks
-        // calculate number of tasks for the week && total percentage. 
-
-
-
-        // save the percentage in a data structure
-        // create array of JSON objects
-        //send the array to the charts
-
-    }, [monthlyTasks]);
-    // any tasks that start betweenn startOfWeek and endOfWeek or are to be completed between startOfweek and endOfweek
-    // filter them. 
-
     const yearlyData = {
-        labels: ['Incomplete Tasks', 'completed Tasks'],
+        labels: ["Current year's Incomplete Tasks", "current year completed Tasks"],
         datasets: [
             {
                 label: 'Tasks',
@@ -194,7 +174,7 @@ function ProgressCharts(props: any) {
     };
 
     const monthlyData = {
-        labels: ['Incomplete Tasks', 'completed Tasks'],
+        labels: ["Current month incomplete Tasks", 'Current month completed Tasks'],
         datasets: [
             {
                 label: 'Tasks',
@@ -221,7 +201,7 @@ function ProgressCharts(props: any) {
     };
 
     const weeklyData = {
-        labels: ['Incomplete Tasks', 'completed Tasks'],
+        labels: ['Current week Incomplete Tasks', 'current week completed Tasks'],
         datasets: [
             {
                 label: 'Tasks',
